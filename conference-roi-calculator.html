@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Conference + Event ROI Calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f4;
+    --bg-tertiary: #efede8;
+    --text: #1a1a18;
+    --text-secondary: #6b6b66;
+    --text-tertiary: #9e9e99;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --green: #1D9E75;
+    --amber: #BA7517;
+    --red: #E24B4A;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #252523;
+      --bg-tertiary: #2e2e2b;
+      --text: #f0ede8;
+      --text-secondary: #9e9e99;
+      --text-tertiary: #6b6b66;
+      --border: rgba(255,255,255,0.10);
+      --border-md: rgba(255,255,255,0.20);
+    }
+  }
+  body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text); font-size: 14px; line-height: 1.5; padding: 2rem 1rem; }
+  .page { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; color: var(--text); }
+  .subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 1.5rem; }
+  .section { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .section-title { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .875rem; display: flex; justify-content: space-between; align-items: center; }
+  .reset-link { font-size: 11px; color: var(--text-secondary); cursor: pointer; text-decoration: underline; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .reset-link:hover { color: var(--text); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field-row.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  @media (max-width: 520px) {
+    .field-row, .field-row.three, .field-row.four { grid-template-columns: 1fr 1fr; }
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text-secondary); }
+  .field input, .field select { height: 34px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 0 9px; font-size: 13px; background: var(--bg); color: var(--text); width: 100%; font-family: var(--font); }
+  .field input:focus, .field select:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+  .note { font-size: 11px; color: var(--text-tertiary); line-height: 1.5; margin-top: 4px; }
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: .75rem 0; }
+  .goal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+  .goal-grid.two { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 520px) { .goal-grid { grid-template-columns: repeat(2,1fr); } }
+  .goal-item { background: var(--bg-secondary); border-radius: var(--radius-md); padding: .75rem; text-align: center; }
+  .goal-item .gl { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; line-height: 1.3; }
+  .goal-item .gv { font-size: 17px; font-weight: 500; color: var(--text); }
+  .goal-item .gv.accent { color: var(--green); }
+  .assume-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: .75rem 0; }
+  @media (max-width: 520px) { .assume-grid { grid-template-columns: 1fr; } }
+  .assume-box { background: var(--bg-secondary); border-radius: var(--radius-md); padding: .875rem; }
+  .assume-box .at { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: .5rem; display: flex; justify-content: space-between; align-items: center; }
+  .assume-field { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 12px; }
+  .assume-field span { color: var(--text-secondary); font-size: 11px; }
+  .assume-field input { width: 64px; height: 28px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 0 6px; font-size: 12px; background: var(--bg); color: var(--text); text-align: right; font-family: var(--font); }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: .75rem; }
+  .toggle { position: relative; width: 38px; height: 20px; cursor: pointer; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .sl { position: absolute; inset: 0; background: var(--border-md); border-radius: 10px; transition: .2s; }
+  .sl::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .2s; }
+  input:checked + .sl { background: var(--green); }
+  input:checked + .sl::before { transform: translateX(18px); }
+  .cadence-wrap { overflow-x: auto; }
+  .cadence-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 580px; }
+  .cadence-table th { font-size: 10px; font-weight: 500; color: var(--text-secondary); text-align: center; padding: 6px 6px; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  .cadence-table th:first-child { text-align: left; }
+  .cadence-table td { padding: 6px 6px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; text-align: center; }
+  .cadence-table td:first-child { text-align: left; color: var(--text-secondary); font-size: 11px; }
+  .cadence-table td input { width: 62px; height: 28px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 0 5px; font-size: 12px; background: var(--bg); color: var(--text); text-align: right; font-family: var(--font); }
+  .cadence-table tr:last-child td { border-bottom: none; }
+  .goal-col { color: var(--text-secondary); font-size: 12px; font-weight: 500; }
+  .window-badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: var(--radius-md); }
+  .w-now { background: #E1F5EE; color: #0F6E56; }
+  .w-30 { background: #E6F1FB; color: #185FA5; }
+  .w-60 { background: #FAEEDA; color: #854F0B; }
+  .w-90 { background: #FAEEDA; color: #854F0B; }
+  .w-6m { background: #FCEBEB; color: #A32D2D; }
+  .w-9m { background: #FCEBEB; color: #A32D2D; }
+  .window-tabs { display: flex; gap: 6px; margin-bottom: .875rem; flex-wrap: wrap; }
+  .wtab { padding: 5px 12px; border-radius: var(--radius-md); border: 0.5px solid var(--border-md); font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text-secondary); transition: .15s; }
+  .wtab.active { background: var(--bg-secondary); color: var(--text); border-color: var(--border-md); }
+  .grade-bar { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 1rem; margin-bottom: .75rem; }
+  .grade-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .75rem; }
+  .composite-score { font-size: 26px; font-weight: 500; }
+  .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .perf-item { padding: .75rem; border-radius: var(--radius-md); border: 0.5px solid var(--border); background: var(--bg); }
+  .perf-item .pi-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
+  .perf-item .pi-val { font-size: 13px; font-weight: 500; }
+  .perf-item .pi-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: 6px; }
+  .perf-item .pi-fill { height: 3px; border-radius: 2px; transition: .3s; }
+  .score-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+  .score-row:last-child { border-bottom: none; }
+  .score-row .lbl { color: var(--text-secondary); }
+  .score-row .val { font-weight: 500; }
+  .err-msg { font-size: 10px; color: var(--red); margin-top: 4px; display: none; }
+  .footer { text-align: center; font-size: 11px; color: var(--text-tertiary); margin-top: 2rem; padding-bottom: 1rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Conference + event ROI calculator</h1>
+  <p class="subtitle">Set goals before you go. Track leading indicators monthly. Close the loop at 6–9 months.</p>
+
+  <div class="section">
+    <div class="section-title">Event setup</div>
+    <div class="field-row">
+      <div class="field"><label>Event name</label><input type="text" id="eventName" placeholder="e.g. TEI Conference 2025" oninput="calc()" /></div>
+      <div class="field"><label>Conference type</label>
+        <select id="confType" onchange="applyDefaults();calc()">
+          <option value="tradeshow">Tradeshow — previously attended, large</option>
+          <option value="user">User / partner conference</option>
+          <option value="new_scouted">Newly sponsored, scouted</option>
+          <option value="new_unscouted">Newly sponsored, not scouted</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row three">
+      <div class="field"><label>Total show attendees</label><input type="number" id="showAttendees" value="900" oninput="calc()" /></div>
+      <div class="field"><label>Sales staff attending</label><input type="number" id="staffCount" value="2" oninput="calc()" /></div>
+      <div class="field"><label>Event days</label><input type="number" id="eventDays" value="3" oninput="calc()" /></div>
+    </div>
+    <div class="field-row three">
+      <div class="field"><label>Avg deal size ($)</label><input type="number" id="avgDeal" value="25000" oninput="calc()" /></div>
+      <div class="field"><label>Tradeshow cost ratio</label><input type="number" id="costRatio" value="5.25" step="0.25" oninput="calc()" /></div>
+      <div class="field"><label>Win rate (%)</label><input type="number" id="winRate" value="33" oninput="calc()" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Expected sales cycle (months)</label><input type="number" id="salesCycle" value="7" oninput="calc()" /></div>
+      <div class="field"><label>First time at this event?</label>
+        <select id="firstTime" onchange="calc()">
+          <option value="no">No — using historical data</option>
+          <option value="yes">Yes — using baseline assumptions</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Event costs</div>
+    <div class="field-row three">
+      <div class="field"><label>Exhibit / sponsor fee ($)</label><input type="number" id="exhibitFee" value="15000" oninput="calc()" /></div>
+      <div class="field"><label>Booth & logistics ($)</label><input type="number" id="boothCost" value="3500" oninput="calc()" /></div>
+      <div class="field"><label>Travel & hotel ($)</label><input type="number" id="travelCost" value="4000" oninput="calc()" /></div>
+    </div>
+    <div class="field-row three">
+      <div class="field"><label>Marketing & promos ($)</label><input type="number" id="marketingCost" value="1500" oninput="calc()" /></div>
+      <div class="field"><label>Staff cost / day ($)</label><input type="number" id="staffDay" value="800" oninput="calc()" /></div>
+      <div class="field"><label>Other ($)</label><input type="number" id="otherCost" value="0" oninput="calc()" /></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Assumptions <span class="reset-link" onclick="resetDefaults()">reset all to defaults</span></div>
+    <div class="assume-grid">
+      <div class="assume-box">
+        <div class="at">Audience <span class="reset-link" onclick="resetAudience()">reset</span></div>
+        <div class="assume-field"><span>Audience conversion rate (%)</span><input type="number" id="a_conv" value="22.5" step="0.5" oninput="calc()" /></div>
+        <div class="assume-field"><span>Meeting-ready audience (%)</span><input type="number" id="a_mtg" value="5" step="0.5" oninput="calc()" /></div>
+        <div class="assume-field"><span>Expected client mix (%)</span><input type="number" id="a_client" value="65" oninput="calc()" /></div>
+        <div class="assume-field"><span>In-market buyers (%)</span><input type="number" id="a_inmarket" value="15" oninput="calc()" /></div>
+      </div>
+      <div class="assume-box">
+        <div class="at">MQL <span class="reset-link" onclick="resetMQL()">reset</span></div>
+        <div class="assume-field"><span>Unqualified (%)</span><input type="number" id="m_unqual" value="50" oninput="checkMQL()" /></div>
+        <div class="assume-field"><span>Nurture only (%)</span><input type="number" id="m_nurture" value="25" oninput="checkMQL()" /></div>
+        <div class="assume-field"><span>Sales ready (%)</span><input type="number" id="m_ready" value="25" oninput="checkMQL()" /></div>
+        <div class="assume-field"><span>MQL → opportunity rate (%)</span><input type="number" id="m_opprate" value="40" oninput="calc()" /></div>
+        <div class="err-msg" id="mqlErr">Unqualified + nurture + sales ready must total 100%</div>
+      </div>
+    </div>
+    <p class="note">Conference type sets baseline defaults. Override any field with your own historical performance data.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">90-day sales goals — hand to sales before the event</div>
+    <div class="goal-grid">
+      <div class="goal-item"><div class="gl">Total contacts to collect</div><div class="gv accent" id="g_contacts">—</div></div>
+      <div class="goal-item"><div class="gl">Net new logo contacts</div><div class="gv accent" id="g_newlogo">—</div></div>
+      <div class="goal-item"><div class="gl">Existing client contacts</div><div class="gv accent" id="g_clients">—</div></div>
+      <div class="goal-item"><div class="gl">Pre-event meetings</div><div class="gv accent" id="g_premtg">—</div></div>
+    </div>
+    <div class="goal-grid">
+      <div class="goal-item"><div class="gl">MQL goal</div><div class="gv" id="g_mql">—</div></div>
+      <div class="goal-item"><div class="gl">Opportunity goal</div><div class="gv" id="g_opp">—</div></div>
+      <div class="goal-item"><div class="gl">Revenue target</div><div class="gv" id="g_rev">—</div></div>
+      <div class="goal-item"><div class="gl">Deals to close</div><div class="gv" id="g_deals">—</div></div>
+    </div>
+    <p class="note" id="cycleNote"></p>
+  </div>
+
+  <div class="section">
+    <div class="toggle-row">
+      <label class="toggle"><input type="checkbox" id="microToggle" onchange="toggleMicro()" /><span class="sl"></span></label>
+      <span style="font-size:13px">Include adjacent micro event</span>
+    </div>
+    <div id="microSection" style="display:none">
+      <p class="note" style="margin-bottom:.75rem">Adjacent micro events consistently outperform stand-alone on pipeline-per-dollar — include from the get-go.</p>
+      <div class="field-row three">
+        <div class="field"><label>Venue ($)</label><input type="number" id="microVenue" value="2500" oninput="calc()" /></div>
+        <div class="field"><label>Catering ($)</label><input type="number" id="microCatering" value="1500" oninput="calc()" /></div>
+        <div class="field"><label>Other ($)</label><input type="number" id="microOther" value="500" oninput="calc()" /></div>
+      </div>
+      <div class="field-row four">
+        <div class="field"><label>Invitees</label><input type="number" id="microInvitees" value="25" oninput="calc()" /></div>
+        <div class="field"><label>Attended</label><input type="number" id="microAttended" value="0" oninput="calc()" /></div>
+        <div class="field"><label>Meetings held</label><input type="number" id="microMeetings" value="0" oninput="calc()" /></div>
+        <div class="field"><label>Opps created</label><input type="number" id="microOpps" value="0" oninput="calc()" /></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Performance scorecard — update each reporting window</div>
+    <p class="note" style="margin-bottom:.875rem">Leading indicators grade immediately. Pipeline and revenue mature over your full sales cycle — don't score the event until the cycle closes.</p>
+    <div class="cadence-wrap">
+      <table class="cadence-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Goal</th>
+            <th><span class="window-badge w-now">Post-event</span></th>
+            <th><span class="window-badge w-30">30 day</span></th>
+            <th><span class="window-badge w-60">60 day</span></th>
+            <th><span class="window-badge w-90">90 day</span></th>
+            <th><span class="window-badge w-6m">6 mo</span></th>
+            <th><span class="window-badge w-9m">9 mo</span></th>
+          </tr>
+        </thead>
+        <tbody id="cadenceBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Event performance score</div>
+    <div class="window-tabs" id="windowTabs"></div>
+    <div class="grade-bar">
+      <div class="grade-header">
+        <span style="font-size:13px;color:var(--text-secondary)" id="activeWindowLabel">Score at post-event</span>
+        <span class="composite-score" id="compositeScore" style="color:var(--text-secondary);font-size:13px">Fill actuals to score</span>
+      </div>
+      <div class="perf-grid" id="perfGrid"></div>
+    </div>
+    <div id="scorecardRows"></div>
+  </div>
+
+  <div class="footer">Conference + Event ROI Calculator &mdash; built for demand gen leaders who plan before they pack.</div>
+</div>
+
+<script>
+var DEFAULTS={
+  tradeshow:{conv:22.5,mtg:5,client:65,inmarket:15},
+  user:{conv:22.5,mtg:10,client:55,inmarket:45},
+  new_scouted:{conv:4,mtg:5,client:30,inmarket:15},
+  new_unscouted:{conv:1,mtg:1,client:20,inmarket:10}
+};
+var MQL_DEFAULTS={unqual:50,nurture:25,ready:25,opprate:40};
+var WINDOWS=['post','w30','w60','w90','w6m','w9m'];
+var WINDOW_LABELS=['Post-event','30 day','60 day','90 day','6 month','9 month'];
+var activeWindow=0;
+var METRICS=[
+  {id:'contacts',label:'Contacts collected',windows:[0,1],weight:0.20},
+  {id:'premtg',label:'Pre-event meetings',windows:[0],weight:0.15},
+  {id:'totalmtg',label:'Total meetings',windows:[0,1],weight:0.10},
+  {id:'mqls',label:'MQLs generated',windows:[1,2],weight:0.20},
+  {id:'sqls',label:'SQLs generated',windows:[2,3],weight:0.10},
+  {id:'opps',label:'Opportunities created',windows:[2,3],weight:0.10},
+  {id:'pipeline',label:'Pipeline value ($)',windows:[3,4],weight:0.05,isCurrency:true},
+  {id:'deals',label:'Deals closed',windows:[4,5],weight:0.05},
+  {id:'revenue',label:'Revenue closed ($)',windows:[4,5],weight:0.05,isCurrency:true}
+];
+var actuals={};
+METRICS.forEach(function(m){WINDOWS.forEach(function(w){actuals[m.id+'_'+w]=''})});
+
+function g(id){return parseFloat(document.getElementById(id).value)||0}
+function gs(id){return document.getElementById(id).value}
+function fmt(n){return '$'+Math.round(n).toLocaleString()}
+function rnd(n){return Math.round(n)}
+function pct(a,b){return b===0?0:Math.min(100,Math.round(a/b*100))}
+
+function applyDefaults(){
+  var d=DEFAULTS[gs('confType')];
+  document.getElementById('a_conv').value=d.conv;
+  document.getElementById('a_mtg').value=d.mtg;
+  document.getElementById('a_client').value=d.client;
+  document.getElementById('a_inmarket').value=d.inmarket;
+}
+function resetDefaults(){applyDefaults();resetMQL();calc()}
+function resetAudience(){applyDefaults();calc()}
+function resetMQL(){
+  document.getElementById('m_unqual').value=MQL_DEFAULTS.unqual;
+  document.getElementById('m_nurture').value=MQL_DEFAULTS.nurture;
+  document.getElementById('m_ready').value=MQL_DEFAULTS.ready;
+  document.getElementById('m_opprate').value=MQL_DEFAULTS.opprate;
+  calc();
+}
+function checkMQL(){
+  var total=g('m_unqual')+g('m_nurture')+g('m_ready');
+  document.getElementById('mqlErr').style.display=Math.abs(total-100)>1?'block':'none';
+  calc();
+}
+function scoreColor(p){
+  if(p>=80)return'#1D9E75';
+  if(p>=55)return'#BA7517';
+  return'#E24B4A';
+}
+function toggleMicro(){
+  document.getElementById('microSection').style.display=document.getElementById('microToggle').checked?'block':'none';
+  calc();
+}
+function getGoals(){
+  var attendees=g('showAttendees'),conv=g('a_conv')/100,mtgPct=g('a_mtg')/100;
+  var clientPct=g('a_client')/100,readyPct=g('m_ready')/100,oppRate=g('m_opprate')/100;
+  var winRate=g('winRate')/100,avgDeal=g('avgDeal');
+  var contacts=rnd(attendees*conv),clientContacts=rnd(contacts*clientPct);
+  var newLogoContacts=contacts-clientContacts,preMtg=rnd(attendees*mtgPct);
+  var mqls=rnd(contacts*readyPct),opps=rnd(mqls*oppRate);
+  var deals=rnd(opps*winRate),pipeline=opps*avgDeal,revenue=deals*avgDeal;
+  var exhibit=g('exhibitFee'),booth=g('boothCost'),travel=g('travelCost');
+  var mktg=g('marketingCost'),other=g('otherCost'),staffCost=g('staffCount')*g('staffDay')*g('eventDays');
+  var microOn=document.getElementById('microToggle').checked;
+  var microCost=microOn?(g('microVenue')+g('microCatering')+g('microOther')):0;
+  var totalInvest=exhibit+booth+travel+mktg+other+staffCost+microCost;
+  return{contacts,clientContacts,newLogoContacts,preMtg,mqls,opps,deals,pipeline,revenue,totalInvest,staffCost,microCost,microOn,revenueTarget:totalInvest*g('costRatio')};
+}
+function buildCadence(goals){
+  var metricGoals={
+    contacts:goals.contacts,premtg:goals.preMtg,totalmtg:rnd(goals.contacts*0.25+goals.preMtg),
+    mqls:goals.mqls,sqls:rnd(goals.mqls*0.5),opps:goals.opps,
+    pipeline:goals.pipeline,deals:goals.deals,revenue:goals.revenue
+  };
+  var html='';
+  METRICS.forEach(function(m){
+    html+='<tr><td>'+m.label+'</td><td class="goal-col">'+(m.isCurrency?fmt(metricGoals[m.id]):metricGoals[m.id])+'</td>';
+    WINDOWS.forEach(function(w,wi){
+      var isActive=m.windows[0]<=wi&&wi<=m.windows[m.windows.length-1]+1;
+      var key=m.id+'_'+w;
+      if(isActive){
+        html+='<td><input type="number" id="sc_'+key+'" placeholder="—" oninput="onActualChange(\''+m.id+'\',\''+w+'\',this.value);calc()" /></td>';
+      } else {
+        html+='<td style="color:var(--text-tertiary);font-size:11px">—</td>';
+      }
+    });
+    html+='</tr>';
+  });
+  document.getElementById('cadenceBody').innerHTML=html;
+  METRICS.forEach(function(m){
+    WINDOWS.forEach(function(w){
+      var el=document.getElementById('sc_'+m.id+'_'+w);
+      if(el&&actuals[m.id+'_'+w]!==''){el.value=actuals[m.id+'_'+w]}
+    });
+  });
+}
+function onActualChange(metric,win,val){actuals[metric+'_'+win]=val===''?'':parseFloat(val)||0}
+function getActual(metric,upTo){
+  var best=null;
+  for(var i=0;i<=upTo;i++){
+    var el=document.getElementById('sc_'+metric+'_'+WINDOWS[i]);
+    if(el&&el.value!==''){best=parseFloat(el.value)||0}
+  }
+  return best;
+}
+function buildWindowTabs(){
+  var html='';
+  WINDOW_LABELS.forEach(function(l,i){
+    html+='<div class="wtab'+(i===activeWindow?' active':'')+'" onclick="setWindow('+i+')">'+l+'</div>';
+  });
+  document.getElementById('windowTabs').innerHTML=html;
+}
+function setWindow(i){activeWindow=i;buildWindowTabs();buildPerf(getGoals())}
+function buildPerf(goals){
+  var metricGoals={
+    contacts:goals.contacts,premtg:goals.preMtg,totalmtg:rnd(goals.contacts*0.25+goals.preMtg),
+    mqls:goals.mqls,sqls:rnd(goals.mqls*0.5),opps:goals.opps,
+    pipeline:goals.pipeline,deals:goals.deals,revenue:goals.revenue
+  };
+  document.getElementById('activeWindowLabel').textContent='Score at '+WINDOW_LABELS[activeWindow];
+  var totalWeight=0,totalScore=0,hasAny=false,perfHtml='',scoreRows='';
+  METRICS.forEach(function(m){
+    var goal=metricGoals[m.id],actual=getActual(m.id,activeWindow);
+    var score=0,hasData=actual!==null;
+    if(hasData&&goal>0){score=pct(actual,goal);hasAny=true}
+    var isRelevant=m.windows[0]<=activeWindow;
+    if(isRelevant&&goal>0){totalWeight+=m.weight;if(hasData)totalScore+=score*m.weight}
+    var c=scoreColor(score);
+    var dispVal=hasData?(m.isCurrency?fmt(actual)+' / '+fmt(goal):actual+' / '+goal):'— / '+(m.isCurrency?fmt(goal):goal);
+    var dispColor=hasData?c:'var(--text-secondary)';
+    perfHtml+='<div class="perf-item"><div class="pi-label">'+m.label+'</div>';
+    perfHtml+='<div class="pi-val" style="color:'+dispColor+'">'+dispVal+'</div>';
+    perfHtml+='<div class="pi-bar"><div class="pi-fill" style="width:'+(hasData?Math.min(100,score)+'%':'0%')+';background:'+c+'"></div></div></div>';
+    scoreRows+='<div class="score-row"><span class="lbl">'+m.label+'</span><span class="val" style="color:'+dispColor+'">'+(hasData?(m.isCurrency?fmt(actual):actual):'—')+'</span></div>';
+  });
+  document.getElementById('perfGrid').innerHTML=perfHtml;
+  var composite=hasAny&&totalWeight>0?Math.round(totalScore/totalWeight):null;
+  var scoreEl=document.getElementById('compositeScore');
+  if(composite!==null){
+    scoreEl.textContent=composite+'/100';
+    scoreEl.style.color=scoreColor(composite);
+    scoreEl.style.fontSize='26px';
+  } else {
+    scoreEl.textContent='Fill actuals to score';
+    scoreEl.style.color='var(--text-secondary)';
+    scoreEl.style.fontSize='13px';
+  }
+  var revenueActual=getActual('revenue',activeWindow);
+  var roi=revenueActual!==null&&goals.totalInvest>0?Math.round((revenueActual-goals.totalInvest)/goals.totalInvest*100):null;
+  scoreRows+='<div class="divider"></div>';
+  scoreRows+='<div class="score-row"><span class="lbl">Total investment</span><span class="val">'+fmt(goals.totalInvest)+'</span></div>';
+  scoreRows+='<div class="score-row"><span class="lbl">Revenue target ('+g('costRatio')+'x ratio)</span><span class="val">'+fmt(goals.revenueTarget)+'</span></div>';
+  scoreRows+='<div class="score-row"><span class="lbl">Revenue closed to date</span><span class="val">'+(revenueActual!==null?fmt(revenueActual):'—')+'</span></div>';
+  scoreRows+='<div class="score-row"><span class="lbl">ROI vs. investment</span><span class="val">'+(roi!==null?roi+'%':'— updates at 6–9 months')+'</span></div>';
+  document.getElementById('scorecardRows').innerHTML=scoreRows;
+}
+function calc(){
+  var goals=getGoals();
+  document.getElementById('g_contacts').textContent=goals.contacts;
+  document.getElementById('g_newlogo').textContent=goals.newLogoContacts;
+  document.getElementById('g_clients').textContent=goals.clientContacts;
+  document.getElementById('g_premtg').textContent=goals.preMtg;
+  document.getElementById('g_mql').textContent=goals.mqls;
+  document.getElementById('g_opp').textContent=goals.opps;
+  document.getElementById('g_rev').textContent=fmt(goals.revenueTarget);
+  document.getElementById('g_deals').textContent=goals.deals;
+  var cycle=g('salesCycle');
+  document.getElementById('cycleNote').textContent='Based on a '+cycle+'-month average sales cycle — revenue and ROI grade at the '+(cycle<=6?'6':'9')+'-month mark, not at 90 days.';
+  buildCadence(goals);
+  buildWindowTabs();
+  buildPerf(goals);
+}
+calc();
+</script>
+</body>
+</html>
